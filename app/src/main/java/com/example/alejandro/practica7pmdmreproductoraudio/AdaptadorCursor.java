@@ -49,12 +49,12 @@ public class AdaptadorCursor extends CursorAdapter {
         tvArtistaLista = (TextView) view.findViewById(R.id.tvArtistaLista);
         tvDuracionLista = (TextView) view.findViewById(R.id.tvDuracionLista);
 
-       /* Long id = Long.parseLong(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)));
-        if (getAlbumart(id, context) == null) {*/
-            Picasso.with(context).load(R.drawable.music).into(ivCaratulaLista);/*
+        Long id = Long.parseLong(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)));
+        if (getAlbumart(id, context) == null) {
+            Picasso.with(context).load(R.drawable.music).into(ivCaratulaLista);
         } else {
             Picasso.with(context).load(getImageUri(context, getAlbumart(id, context))).into(ivCaratulaLista);
-        }*/
+        }
         tvNombreLista.setText(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)));
         tvArtistaLista.setText(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)));
         String duracion = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
