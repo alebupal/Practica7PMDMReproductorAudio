@@ -363,7 +363,7 @@ public class Reproductor extends Activity {
     public void anterior(){
         ibPlay.setVisibility(View.INVISIBLE);
         ibPause.setVisibility(View.VISIBLE);
-        
+
         int posicion=posicionPorID(id,canciones);
         posicion--;
         if(posicion<0){
