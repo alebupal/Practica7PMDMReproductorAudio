@@ -65,7 +65,6 @@ public class Servicio extends Service implements MediaPlayer.OnPreparedListener,
         AudioManager am = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         int r = am.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         if(r == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
-            //Que hacer?
         }
         estado = Estados.idle;
 
@@ -73,7 +72,6 @@ public class Servicio extends Service implements MediaPlayer.OnPreparedListener,
 
     @Override
     public void onDestroy() {
-        //mp.reset();
         mp.release();
         mp = null;
         super.onDestroy();
