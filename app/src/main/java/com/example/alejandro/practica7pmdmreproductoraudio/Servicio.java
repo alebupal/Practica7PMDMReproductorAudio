@@ -225,9 +225,6 @@ public class Servicio extends Service implements MediaPlayer.OnPreparedListener,
         stop();
         initComponents();
         this.rutaCancion = cancion;
-        rutaCancion = cancion;
-        dato = cancion;
-        Log.v("ADD",cancion);
         play();
     }
 

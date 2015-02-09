@@ -118,20 +118,6 @@ public class Reproductor extends Activity {
             Picasso.with(getApplicationContext()).load(getImageUri(getApplicationContext(), getAlbumart(Long.parseLong(cancionActual.getIdAlbum()), getApplicationContext()))).into(ivCaratulaReproductor);
         }
     }
-    public Bitmap getAlbumart(Long album_id, Context context) {
-        Bitmap bm = null;
-        try {
-            final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
-            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
-            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r");
-            if (pfd != null) {
-                FileDescriptor fd = pfd.getFileDescriptor();
-                bm = BitmapFactory.decodeFileDescriptor(fd);
-            }
-        } catch (Exception e) {
-        }
-        return bm;
-    }
 
     private void volumen(){
         try{
@@ -155,25 +141,6 @@ public class Reproductor extends Activity {
         }
     }
 
-    public void atras(View v){
-        Intent i = new Intent(getApplicationContext(), ListaCanciones.class);
-        startActivity(i);
-    }
-    @Override
-    public void onBackPressed() {
-        Intent i = new Intent(getApplicationContext(), ListaCanciones.class);
-        startActivity(i);
-
-    }
-
-    public void grabar(View v){
-        Intent i = new Intent(getApplicationContext(), Grabar.class);
-        startActivity(i);
-    }
-
-
-
-
     public void add(){
         Intent intent = new Intent(this, Servicio.class);
         intent.putExtra("cancion",cancionActual.getRuta());
@@ -181,6 +148,47 @@ public class Reproductor extends Activity {
         intent.setAction(Servicio.ADD);
         startService(intent);
     }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        Servicio.servicioActivo=false;
+        unregisterReceiver(receptor);
+        stopService(new Intent(this, Servicio.class));
+    }
+
+    public void barraProgreso(){
+        sbProgreso.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if(Servicio.servicioActivo){
+                    Intent intent = new Intent(Reproductor.this, Servicio.class);
+                    intent.putExtra("posicionNueva", seekBar.getProgress());
+                    intent.setAction(Servicio.POSICION);
+                    startService(intent);
+                }
+            }
+        });
+    }
+    @Override
+
+    protected void onResume() {
+        super.onResume();
+        Servicio.servicioActivo = true;
+        registerReceiver(receptor, new IntentFilter(PROGRESO));
+    }
+
+
+
+    /* Botones */
 
     public void play(View v){
 
@@ -201,8 +209,6 @@ public class Reproductor extends Activity {
             intent.setAction(Servicio.PLAY);
             startService(intent);
         }
-
-
 
         sbProgreso.setProgress(0);
         sbProgreso.setMax(cancionActual.getDuracion());
@@ -225,6 +231,7 @@ public class Reproductor extends Activity {
         intent.setAction(Servicio.PAUSE);
         startService(intent);
     }
+
     public void btSiguiente(View v){
         siguiente();
         asignarValores();
@@ -236,6 +243,7 @@ public class Reproductor extends Activity {
         intent.setAction(Servicio.PLAY);
         startService(intent);
     }
+
     public void btAnterior(View v){
         anterior();
         asignarValores();
@@ -248,6 +256,52 @@ public class Reproductor extends Activity {
         startService(intent);
     }
 
+    public void atras(View v){
+        Intent i = new Intent(getApplicationContext(), ListaCanciones.class);
+        startActivity(i);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent i = new Intent(getApplicationContext(), ListaCanciones.class);
+        startActivity(i);
+
+    }
+
+    public void grabar(View v){
+        Intent i = new Intent(getApplicationContext(), Grabar.class);
+        startActivity(i);
+    }
+
+
+    /* BroadcastReceiver */
+
+
+    private BroadcastReceiver receptor= new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Bundle bundle = intent.getExtras();
+            int posicionActual = bundle.getInt("posicionActual");
+            if(Servicio.servicioActivo) {
+                sbProgreso.setProgress(posicionActual);
+                sbProgreso.setMax(cancionActual.getDuracion());
+                tvInicioReproductor.setText(darTiempo(posicionActual));
+            }
+            Log.v("posicionActual",posicionActual+"");
+            Log.v("duracion",cancionActual.getDuracion()+"");
+
+            if(posicionActual == cancionActual.getDuracion()) {
+                siguiente();
+                asignarValores();
+                add();
+            }
+        }
+    };
+
+
+
+    /* Métodos propios */
 
 
     public String darTiempo(int milisegundos){
@@ -409,64 +463,23 @@ public class Reproductor extends Activity {
         }
         return posicion;
     }
-    protected void onDestroy() {
-        super.onDestroy();
-        Servicio.servicioActivo=false;
-        unregisterReceiver(receptor);
-        stopService(new Intent(this, Servicio.class));
-    }
 
-    public void barraProgreso(){
-        sbProgreso.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+    public Bitmap getAlbumart(Long album_id, Context context) {
+        Bitmap bm = null;
+        try {
+            final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r");
+            if (pfd != null) {
+                FileDescriptor fd = pfd.getFileDescriptor();
+                bm = BitmapFactory.decodeFileDescriptor(fd);
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                if(Servicio.servicioActivo){
-                    Intent intent = new Intent(Reproductor.this, Servicio.class);
-                    intent.putExtra("posicionNueva", seekBar.getProgress());
-                    intent.setAction(Servicio.POSICION);
-                    startService(intent);
-                }
-            }
-        });
-    }
-
-
-    private BroadcastReceiver receptor= new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            Bundle bundle = intent.getExtras();
-            int posicionActual = bundle.getInt("posicionActual");
-            if(Servicio.servicioActivo) {
-                sbProgreso.setProgress(posicionActual);
-                sbProgreso.setMax(cancionActual.getDuracion());
-                tvInicioReproductor.setText(darTiempo(posicionActual));
-            }
-            Log.v("posicionActual",posicionActual+"");
-            Log.v("duracion",cancionActual.getDuracion()+"");
-
-            if(posicionActual == cancionActual.getDuracion()) {
-                siguiente();
-                asignarValores();
-                add();
-            }
+        } catch (Exception e) {
         }
-    };
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Servicio.servicioActivo = true;
-        registerReceiver(receptor, new IntentFilter(PROGRESO));
+        return bm;
     }
+
+
 
 
 
